@@ -15,150 +15,124 @@ using Object = UnityEngine.Object;
 
 namespace BetterWarehouses
 {
-    // [HarmonyPatch(typeof(ExecuteEvents), "Execute", new Type[] { typeof(IPointerEnterHandler), typeof(BaseEventData) })]
+    [HarmonyPatch(typeof(GameScript), "Update", new Type[] { })]
     public class Patch
     {
-        private static bool warehouseInfoCreated = false;
-        private static GameObject warehouseInfo = null;
-        private static Text warehouseTextComponent = null;
-        private static Warehouse warehouse = null;
+        private static bool _warehouseInfoCreated = false;
+        private static GameObject _warehouseInfo = null;
+        private static Text _warehouseTextComponent = null;
+        private static Warehouse _warehouse = null;
+        private static KeyCode _checkInWarehouseShortcut;
 
-        // [HarmonyPostfix]
-        public static void Postfix_EventSystems_ExecuteEvents(MethodBase __originalMethod, object handler, BaseEventData eventData)
+        private static void SetShortcut()
         {
-            var uiManager = UIManager.Get();
-            if (warehouseInfoCreated != true)
+            var betterWarehousePrefs = MelonPreferences.GetCategory("BetterWarehouse");
+            var checkInWarehouseEntry = betterWarehousePrefs.GetEntry<string>("checkInWarehouse");
+            if (Enum.TryParse(checkInWarehouseEntry.Value, true, out KeyCode key))
             {
-                if (uiManager.PartInspector == null) return;
-                    
-                MelonLogger.Msg("1");
-                var partsInspector = uiManager.PartInspector ? uiManager.PartInspector.gameObject : null;
+                _checkInWarehouseShortcut = key;
+            }
+            else
+            {
+                MelonLogger.Msg($"Unable to parse checkInWarehouse shortcut as a key. {checkInWarehouseEntry.Value}");
+                MelonLogger.Msg("Setting checkInWarehouse shortcut to default G");
+                _checkInWarehouseShortcut = KeyCode.G;
+            }
                 
-                MelonLogger.Msg("2");
-                var conditionGameObject = uiManager.PartInspector.condition.gameObject;
-                MelonLogger.Msg("3");
-                var inspectorTransformParent = uiManager.PartInspector.gameObject.transform.Find("Inspector");
-                MelonLogger.Msg("4");
+            // var conditionGameObject = UIManager.Get().PartInspector.condition.gameObject;
+            // var inspectorTransformParent = UIManager.Get().PartInspector.gameObject.transform.Find("Inspector");
+            // warehouseInfo = Instantiate(conditionGameObject, inspectorTransformParent);
+            // warehouseInfo.name = "warehouseInfo";
+            // MelonLogger.Msg("finished setting name");
+            // warehouseInfo.transform.position += Vector3.up * 80.0f;
+            // warehouseInfo.GetComponent<Image>().color = new Color(0.6604f, 1, 0.9812f, 1);
 
-                if (conditionGameObject != null && inspectorTransformParent != null)
+            // warehouseTextComponent = warehouseInfo.transform.Find("ConditionPercentage").GetComponent<Text>();
+
+            _warehouse = GameScript.Get().gameObject.GetComponent<Warehouse>();
+            _warehouseInfoCreated = true;
+        }
+
+        private static List<IGrouping<string, BaseItem>> searchWarehouse()
+        {
+            
+            var internalPart = GameScript.Get().GetPartMouseOver();
+            var bodyPart = GameScript.Get().GetIOMouseOverCarLoader();
+            
+            var warehouseFinds = new List<BaseItem>();
+            if (internalPart != null)
+            {
+                var id = internalPart.GetIDWithTuned();
+                var allWarehouseItems = _warehouse.GetAllItemsAndGroups();
+                foreach (var warehouseItem in allWarehouseItems)
                 {
-                    MelonLogger.Msg("5");
-                    warehouseInfo = GameObject.Instantiate(conditionGameObject, inspectorTransformParent);
-
-                    MelonLogger.Msg("setting name");
-                    warehouseInfo.name = "warehouseInfo";
-                    MelonLogger.Msg("finished setting name");
-                    warehouseInfo.transform.position += Vector3.up * 80.0f;
-                    // warehouseInfo.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-                    // warehouseInfo.GetComponent<RectTransform>().anchorMax = new Vector2(1, 0.25f);
-                    warehouseInfo.GetComponent<Image>().color = new Color(0.6604f, 1, 0.9812f, 1);
-
-                    warehouseTextComponent = warehouseInfo.transform.Find("ConditionPercentage").GetComponent<Text>();
-
-                    warehouse = GameScript.Get().gameObject.GetComponent<Warehouse>();
-                    MelonLogger.Msg("6");
-                    warehouseInfoCreated = true;
+                    // MelonLogger.Msg($"warehouse item {warehouseItem.GetLocalizedName()}");
+                    if (warehouseItem.ID == id)
+                    {
+                        warehouseFinds.Add(warehouseItem);
+                    }
                 }
             }
+            else if (bodyPart != null)
+            {
+                // var id = bodyPart.GetIDWithTuned();
+                // var allWarehouseItems = warehouse.GetAllItemsAndGroups();
+                // foreach (var warehouseItem in allWarehouseItems)
+                // {
+                //     if (warehouseItem.ID == id)
+                //     {       
+                //         warehouseFinds.Add(warehouseItem);
+                //     }
+                // }
+            }
             
-            // if (Input.GetKeyDown(KeyCode.G))
-            // {
-            MelonLogger.Msg("7");
-                var internalPart = GameScript.Get().GetPartMouseOver();
-                var bodyPart = GameScript.Get().GetIOMouseOverCarLoader();
+            var warehouseFindsByCount = warehouseFinds.GroupBy(i => i.ID).ToList();
+            return warehouseFindsByCount;
+        }
+        
+        [HarmonyPostfix]
+        public static void Update()
+        {
+            if (_warehouseInfoCreated != true)
+            {
+                SetShortcut();
+            }
 
-                var warehouseFinds = new List<BaseItem>();
-                if (internalPart != null)
-                {
-                    var id = internalPart.GetIDWithTuned();
-                    var allWarehouseItems = warehouse.GetAllItemsAndGroups(); 
-                    foreach (var warehouseItem in allWarehouseItems)
-                    {
-                        // MelonLogger.Msg($"warehouse item {warehouseItem.GetLocalizedName()}");
-                        if (warehouseItem.ID == id)
-                        {       
-                            warehouseFinds.Add(warehouseItem);
-                        }
-                    }
-                }
-                else if (bodyPart != null)
-                {
-                    // var id = bodyPart.GetIDWithTuned();
-                    // var allWarehouseItems = warehouse.GetAllItemsAndGroups();
-                    // foreach (var warehouseItem in allWarehouseItems)
-                    // {
-                    //     if (warehouseItem.ID == id)
-                    //     {       
-                    //         warehouseFinds.Add(warehouseItem);
-                    //     }
-                    // }
-                }
+            if (!Input.GetKeyDown(_checkInWarehouseShortcut)) return;
+            
+            var warehouseFindsByCount = searchWarehouse();
+            foreach (var grouping in warehouseFindsByCount.Where(grouping => grouping.Any()))
+            {
+                UIManager.Get().ShowPopup("Warehouse", $"{grouping.Count()} in warehouse", PopupType.Buy);
+                // warehouseTextComponent.text =
+                // $"{grouping.Count()} {grouping.First().GetLocalizedName()} in Warehouse";
+            }
 
-                foreach (var grouping in warehouseFinds.GroupBy(i => i.ID))
-                {
-                    if (grouping.Any())
-                    {
-                        warehouseTextComponent.text =
-                            $"{grouping.Count()} {grouping.First().GetLocalizedName()} in Warehouse";
-                    }
-                }
-            // }
+            if (!warehouseFindsByCount.Any())
+            {
+                UIManager.Get().ShowPopup("Warehouse", $"0 in warehouse", PopupType.Buy);
+            }
         }
     }
 
     public class Loader : MelonMod
     {
-        
+        private static MelonPreferences_Category _betterWarehousePrefs;
+
         public override void OnApplicationStart()
         {
-            MelonLogger.Msg("Registering");
-            try
+            MelonLogger.Msg("Loading preferences");
+            MelonPreferences.Load();
+            _betterWarehousePrefs = MelonPreferences.GetCategory("BetterWarehouse");
+            if (_betterWarehousePrefs == null)
             {
-                ClassInjector.RegisterTypeInIl2Cpp<BetterWarehouseHandler>();
-                var go = new GameObject("BetterWarehouses");
-                go.AddComponent<BetterWarehouseHandler>();
-                Object.DontDestroyOnLoad(go);
+                _betterWarehousePrefs = MelonPreferences.CreateCategory("BetterWarehouse");
+                MelonLogger.Msg("Creating checkInWarehouse shortcut");
+                _betterWarehousePrefs.CreateEntry("checkInWarehouse", "G");
+                _betterWarehousePrefs.SaveToFile();
             }
-            catch (Exception ex)
-            {
-                MelonLogger.Msg($"Failed to register handler {ex}");
-            }
-            
-            
-            
-            try
-            {
-                // Our Primary Unity Event Hooks 
-                HarmonyLib.Harmony harmony = this.HarmonyInstance;
-            
-                // Update
-                var originalUpdate = HarmonyLib.AccessTools.Method(typeof(GameScript), "Update"); // Change Type!
-                MelonLogger.Msg("[BW] Harmony - Original Method: " + originalUpdate.DeclaringType.Name + "." + originalUpdate.Name);
-                var postUpdate = HarmonyLib.AccessTools.Method(typeof(BetterWarehouseHandler), "Update");
-                MelonLogger.Msg("[BW] Harmony - Postfix Method: " + postUpdate.DeclaringType.Name + "." + postUpdate.Name);
-                harmony.Patch(originalUpdate, postfix: new HarmonyLib.HarmonyMethod(postUpdate));
-                MelonLogger.Msg("[BW] Harmony - Runtime Patches Applied");
-            }
-            catch
-            {
-                MelonLogger.Msg("[BW] Harmony - FAILED to Apply Patches!");
-            }
+            MelonPreferences.Load();
 
-            // try
-            // {
-            //     HarmonyInstance harmony = this.Harmony;
-            //     var originalUpdate = HarmonyLib.AccessTools.Method(typeof(BaseItem), "GetCondition");
-            //     MelonLogger.Msg("[BW] Harmony - Original Method: " + originalUpdate.DeclaringType.Name + "." + originalUpdate.Name);
-            //     var postUpdate = HarmonyLib.AccessTools.Method(typeof(BetterWarehouseHandler), "Update");
-            //     MelonLogger.Msg("[BW] Harmony - Postfix Method: " + postUpdate.DeclaringType.Name + "." + postUpdate.Name);
-            //     harmony.Patch(originalUpdate, postfix: new HarmonyLib.HarmonyMethod(postUpdate));
-            //     MelonLogger.Msg("[BW] Harmony - Runtime Patches Applied");
-            //
-            // }
-            // catch
-            // {
-            //     MelonLogger.Msg("[BW] Harmony - FAILED to Apply Patches!");
-            // }
             base.OnApplicationStart();
         }
     }
