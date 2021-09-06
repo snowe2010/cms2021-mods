@@ -378,6 +378,10 @@
     <Compile Include="Loader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="LICENSE.md" />
+    <Content Include="README.md" />
+  </ItemGroup>
    <!-- <PostBuildEvent Condition=" '$(OS)' != 'Unix' ">copy BetterWarehouses.dll E:\Steam\steamapps\common\Car Mechanic Simulator 2021\Mods\BetterWarehouses.dll</PostBuildEvent> -->
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
