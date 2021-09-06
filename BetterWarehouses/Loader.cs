@@ -117,21 +117,15 @@ namespace BetterWarehouses
 
     public class Loader : MelonMod
     {
-        private static MelonPreferences_Category _betterWarehousePrefs;
-
         public override void OnApplicationStart()
         {
             MelonLogger.Msg("Loading preferences");
-            MelonPreferences.Load();
-            _betterWarehousePrefs = MelonPreferences.GetCategory("BetterWarehouse");
-            if (_betterWarehousePrefs == null)
+            var melonPreferencesCategory = MelonPreferences.CreateCategory("BetterWarehouse");
+            if (!melonPreferencesCategory.HasEntry("checkInWarehouse"))
             {
-                _betterWarehousePrefs = MelonPreferences.CreateCategory("BetterWarehouse");
                 MelonLogger.Msg("Creating checkInWarehouse shortcut");
-                _betterWarehousePrefs.CreateEntry("checkInWarehouse", "G");
-                _betterWarehousePrefs.SaveToFile();
+                melonPreferencesCategory.CreateEntry("checkInWarehouse", "G");
             }
-            MelonPreferences.Load();
 
             base.OnApplicationStart();
         }
