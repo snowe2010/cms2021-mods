@@ -83,6 +83,7 @@ namespace RemoteControlLifts
                 var carLifter = GameObject.Find("!Garage Dynamic/Car_lift_1").GetComponent<CarLifter>();
                 MoveLifter(carLifter);
             }
+
             if (Input.GetKeyDown(_changeLift2))
             {
                 MelonLogger.Msg("trying to move lift 2");
@@ -93,6 +94,7 @@ namespace RemoteControlLifts
 
         private static void MoveLifter(CarLifter carLifter)
         {
+            if (carLifter.IsBlocked()) return;
             switch (carLifter.currentState)
             {
                 case CarLifterState.Middle:
@@ -212,6 +214,13 @@ namespace RemoteControlLifts
         public static void ResetForTutorial()
         {
             MelonLogger.Msg($"ResetForTutorial");
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch("IsBlocked")]
+        public static void IsBlocked()
+        {
+            MelonLogger.Msg($"IsBlocked");
         }
     }
 }
