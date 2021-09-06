@@ -35,8 +35,8 @@ namespace BetterWarehouses
             else
             {
                 MelonLogger.Msg($"Unable to parse checkInWarehouse shortcut as a key. {checkInWarehouseEntry.Value}");
-                MelonLogger.Msg("Setting checkInWarehouse shortcut to default G");
-                _checkInWarehouseShortcut = KeyCode.G;
+                MelonLogger.Msg("Setting checkInWarehouse shortcut to default Z");
+                _checkInWarehouseShortcut = KeyCode.Z;
             }
                 
             // var conditionGameObject = UIManager.Get().PartInspector.condition.gameObject;
@@ -117,128 +117,9 @@ namespace BetterWarehouses
                     UIManager.Get().ShowPopup("Warehouse", $"0 in warehouse", PopupType.Buy);
                 }
             }
-
-            if (Input.GetKeyDown(KeyCode.N))
-            {
-                MelonLogger.Msg("trying to move lift 1 down");
-                var carLifter = GameObject.Find("!Garage Dynamic/Car_lift_1").GetComponent<CarLifter>();
-                carLifter.MoveDown();
-                carLifter.OpenArmsAnimated(45, false);
-                carLifter.Action(1);
-            }
-
-            if (Input.GetKeyDown(KeyCode.H))
-            {
-                MelonLogger.Msg("trying to move lift 1 up");
-                var carLifter = GameObject.Find("!Garage Dynamic/Car_lift_1").GetComponent<CarLifter>();
-                carLifter.MoveUp();
-                carLifter.Action(0);
-            }
         }
     }
 
-    [HarmonyPatch(typeof(CarLifter))]
-    public class LogStuff
-    {
-        [HarmonyPostfix]
-        [HarmonyPatch( "Action")]
-        public static void Action(int actionType)
-        {
-            MelonLogger.Msg($"Action {actionType}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "Awake")]
-        public static void Awake()
-        {
-            MelonLogger.Msg($"Awake");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "ConnectCar")]
-        public static void ConnectCar(CarLoader car)
-        {
-            MelonLogger.Msg($"CarLoader {car.name}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "DisconnectCar")]
-        public static void DisconnectCar()
-        {
-            MelonLogger.Msg($"DisconnectCar");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "EnableButton")]
-        public static void EnableButton(LifterButtonTypes lifterButton, bool enable)
-        {
-            MelonLogger.Msg($"EnableButton {lifterButton}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "MoveDown")]
-        public static void MoveDown(bool instant, bool switchIO)
-        {
-            MelonLogger.Msg($"MoveDown {instant} {switchIO}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "MoveMedFromFloor")]
-        public static void MoveMedFromFloor(bool instant, bool switchIO)
-        {
-            MelonLogger.Msg($"MoveMedFromFloor {instant} {switchIO}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "MoveMiddleToFloor")]
-        public static void MoveMiddleToFloor(bool instant, bool switchIO)
-        {
-            MelonLogger.Msg($"MoveMiddleToFloor {instant} {switchIO}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "MoveUp")]
-        public static void MoveUp(bool instant, bool switchIO)
-        {
-            MelonLogger.Msg($"MoveUp {instant} {switchIO}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "OnCompleteMoveDown")]
-        public static void OnCompleteMoveDown(bool instant, bool switchIO)
-        {
-            MelonLogger.Msg($"OnCompleteMoveDown {instant} {switchIO}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "OnDestroy")]
-        public static void OnDestroy()
-        {
-            MelonLogger.Msg($"OnDestroy");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "OpenArmsAnimated")]
-        public static void OpenArmsAnimated(float angle, bool instant)
-        {
-            MelonLogger.Msg($"OpenArmsAnimated {angle} {instant}");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "ResetActions")]
-        public static void ResetActions()
-        {
-            MelonLogger.Msg($"ResetActions");
-        }
-        
-        [HarmonyPostfix]
-        [HarmonyPatch( "ResetForTutorial")]
-        public static void ResetForTutorial()
-        {
-            MelonLogger.Msg($"ResetForTutorial");
-        }
-        
-    }
     public class Loader : MelonMod
     {
         public override void OnApplicationStart()
@@ -248,8 +129,7 @@ namespace BetterWarehouses
             if (!melonPreferencesCategory.HasEntry("checkInWarehouse"))
             {
                 MelonLogger.Msg("Creating checkInWarehouse shortcut");
-                melonPreferencesCategory.CreateEntry("checkInWarehouse", "G");
-                melonPreferencesCategory.CreateEntry("raiseLowerLift1", "B");
+                melonPreferencesCategory.CreateEntry("checkInWarehouse", "Z");
             }
 
             base.OnApplicationStart();
